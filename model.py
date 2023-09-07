@@ -16,7 +16,7 @@ class Dense(torch.nn.Module):
             self.layers.append(torch.nn.Linear(intermediate_size, next_size))
             # slowly interpolate between input_size and output_size for intermediate sizes
             intermediate_size = next_size
-        self.act = torch.nn.Tanh()
+        self.act = torch.nn.SiLU()
         self.device = device
 
     def forward(self, x):
