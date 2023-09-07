@@ -1,0 +1,15 @@
+#gitignore for python
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+#gitignore for pycharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+#gitignore for datasets
+datasets/*
+
