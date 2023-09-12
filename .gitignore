@@ -13,3 +13,16 @@ __pycache__/
 #gitignore for datasets
 datasets/*
 
+#gitignore for models
+models/*
+
+#but keep best model
+
+!models/model_nietz.pt
+
+
+#wandb
+wandb/
+
+#gitignore for notebooks
+.ipynb_checkpoints/

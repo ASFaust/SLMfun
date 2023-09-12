@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 
-def encode_string(to_encode, device):
+def encode_string(to_encode, device, truncate = True):
     to_encode_len = len(to_encode)
     # Convert string to bytes
     encoded = list(to_encode.encode('utf-8'))
@@ -10,8 +10,8 @@ def encode_string(to_encode, device):
     # Convert each byte to a one-hot vector
     encoded = np.eye(256)[encoded]
 
-    #only return the last to_encode_len one-hot vectors
-    encoded = encoded[-to_encode_len:]
+    if truncate:
+        encoded = encoded[-to_encode_len:]
 
     # Convert to a PyTorch tensor
     encoded = torch.from_numpy(encoded).float().to(device)
