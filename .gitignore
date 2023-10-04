@@ -12,14 +12,11 @@ __pycache__/
 
 #gitignore for datasets
 datasets/*
+#but keep nietz.txt
+!datasets/nietz.txt
 
 #gitignore for models
 models/*
-
-#but keep best model
-
-!models/model_nietz.pt
-
 
 #wandb
 wandb/
