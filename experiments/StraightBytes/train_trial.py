@@ -47,4 +47,4 @@ while True:
     print("\r{}: {:0.5f}".format(i, loss.item()), end='', flush=True)
     optimizer.step()
     if i % 10000 == 0:
-        net.save("models/basmodel.pt".format(i))
+        net.save("models/basmodel.pt")
