@@ -15,8 +15,9 @@ history_size = 1000
 device = 'cuda'
 batch_size = 256
 state_size = 256
+eval_every = 1 #number of bptt unrolls
 
-generator = DataGenerator('datasets/bas.txt', batch_size=batch_size, history_size=history_size, device=device)
+generator = DataGenerator('datasets/nietz.txt', batch_size=batch_size, history_size=history_size, device=device)
 
 net = Net(state_size=state_size, batch_size=batch_size, device=device)
 
@@ -29,23 +30,32 @@ optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 
 wandb.config.update({"state_size": state_size, "batch_size": batch_size, "history_size": history_size})
 
-ma_loss = 3.0
 i = 0
+ma_loss = 3.0
 while True:
-    #t0 = time.time()
-    i += 1
     x, _ = generator.get_batch()
-    pred = net.forward(x)
-
-
-    wandb.log({"loss": ma_loss, "Top1 error": 1.0 - ma_perc})
-    optimizer.zero_grad()
-    loss.backward()
-    #clip gradients
-    torch.nn.utils.clip_grad_value_(net.parameters(), clip_value=1.0)
-    optimizer.step()
-    t2 = time.time()
-    #print("  {} {}".format(t1-t0, t2-t1), end='\n', flush=True)
-    if (i % 1000 == 0):
-        net.save("models/model_{:05d}.pt".format(i))
-        #print("resetting state")
+    sum_loss = 0
+    for j in range(x.shape[0] - 1):
+        i += 1
+        inputs = x[:,j]
+        targets = x[:,j+1].argmax(dim=1)
+        pred = net.forward(inputs)
+        loss = loss_fn(pred, targets)
+        sum_loss += loss
+        if (i % eval_every == 0):
+            optimizer.zero_grad()
+            sum_loss.backward()
+            loss_val = sum_loss.item() / eval_every
+            wandb.log({"loss": loss_val, "state_loss": state_loss.item(), "input_loss": input_loss.item()})
+            print("\r{}: {:0.5f}".format(i, loss_val), end='', flush=True)
+            #clip gradients
+            #torch.nn.utils.clip_grad_value_(net.parameters(), clip_value=1.0)
+            optimizer.step()
+            net.detach_state()
+            sum_loss = 0
+        if (i % 1000 == 0):
+            net.save("models/model2.pt".format(i))
+            # print("resetting state")
+    net.detach_state()
+    sum_loss = 0
+    net.reset()
