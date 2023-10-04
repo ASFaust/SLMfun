@@ -3,7 +3,6 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-
 #gitignore for pycharm
 .idea/
 *.iml
@@ -11,15 +10,15 @@ __pycache__/
 *.ipr
 
 #gitignore for datasets
-datasets/*
+**/datasets/*
 #but keep nietz.txt
 !datasets/nietz.txt
 
 #gitignore for models
-models/*
+**/models/*
 
 #wandb
-wandb/
+**/wandb/
 
 #gitignore for notebooks
 .ipynb_checkpoints/

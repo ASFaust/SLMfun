@@ -1,10 +1,5 @@
-import sys
-import os
-
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'lib'))
-
-from DataGenerator import DataGenerator
-from model import Net
+from lib.DataGenerator import DataGenerator
+from lib.Net import Net
 import torch
 import time
 import wandb
@@ -14,13 +9,13 @@ wandb.init(project="Stimulus Language Model")
 history_size = 1000
 device = 'cuda'
 batch_size = 256
-state_size = 256
+hidden_size = 256
+n_layers = 1
 eval_every = 1 #number of bptt unrolls
 
-generator = DataGenerator('datasets/nietz.txt', batch_size=batch_size, history_size=history_size, device=device)
+generator = DataGenerator('../../datasets/nietz.txt', batch_size=batch_size, history_size=history_size, device=device)
 
-net = Net(state_size=state_size, batch_size=batch_size, device=device)
-
+net = Net(batch_size=batch_size, hidden_size=hidden_size, n_layers=n_layers, device=device)
 wandb.watch(net)
 
 #cross entropy loss that expects a one-hot encoded target and logit output
@@ -28,7 +23,7 @@ loss_fn = torch.nn.CrossEntropyLoss()
 
 optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
 
-wandb.config.update({"state_size": state_size, "batch_size": batch_size, "history_size": history_size})
+wandb.config.update({"hidden_size": hidden_size, "n_layers": n_layers, "batch_size": batch_size, "history_size": history_size})
 
 i = 0
 ma_loss = 3.0
@@ -46,7 +41,11 @@ while True:
             optimizer.zero_grad()
             sum_loss.backward()
             loss_val = sum_loss.item() / eval_every
-            wandb.log({"loss": loss_val, "state_loss": state_loss.item(), "input_loss": input_loss.item()})
+            wandb.log({
+                "loss": loss_val,
+                "state l2" : net.l2.state[0].detach().cpu().numpy(),
+                "state l4" : net.l4.state[0].detach().cpu().numpy()
+            })
             print("\r{}: {:0.5f}".format(i, loss_val), end='', flush=True)
             #clip gradients
             #torch.nn.utils.clip_grad_value_(net.parameters(), clip_value=1.0)
@@ -55,7 +54,7 @@ while True:
             sum_loss = 0
         if (i % 1000 == 0):
             net.save("models/model2.pt".format(i))
-            # print("resetting state")
+            #print("resetting state")
     net.detach_state()
     sum_loss = 0
     net.reset()

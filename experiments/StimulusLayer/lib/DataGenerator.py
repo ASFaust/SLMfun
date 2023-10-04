@@ -1,4 +1,4 @@
-from encoding import encode_string, decode_string
+from lib.encoding import encode_string, decode_string
 import torch
 import numpy as np
 
