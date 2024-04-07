@@ -48,6 +48,7 @@ class TransformerNet(torch.nn.Module):
         self.memory_size = memory_size
         self.device = device
         self.first_query = Dense(input_size,memory_size,2,device,output_activation="linear")
+        self.second_query = Dense(input_size + memory_size,memory_size,2,device,output_activation="linear")
         self.g = Dense(memory_size,memory_size+input_size,2,device,output_activation="linear") #linear because
         self.memory = torch.zeros((batch_size,memory_slots,memory_size),device=device)
 
@@ -64,8 +65,20 @@ class TransformerNet(torch.nn.Module):
 
         #first round of self attention
         first_query = self.first_query(x)
-        first_query = 0 #TODO
+        first_read = self.read_mem(first_query)
+        second_query = self.second_query(torch.cat([x,first_read]),dim=1)
+        second_read = self.read_mem(second_query)
+        #two rounds should be enough. now concat the reads and x to a token that is to be written, and also use a different key to indicate where it should be overwritten.
+        #separating key, query and value here do make sense tho
+        #we can initialize with random queries and zero values, which gives us a nonzero
+        #but how does this still learn to separate concerns between things?
 
+    def read_mem(self,query):
+        query = torch.unsqueeze(query,1).expand(-1,self.memory_slots,-1) #expand the query to match the memory
+        attention = torch.sum(self.memory * query,dim=2)
+        attention = torch.nn.functional.softmax(attention,dim=1)
+        read = torch.sum(self.memory * torch.unsqueeze(attention,2),dim=1)
+        return read
 
     def reconstruct(self, noise=0):
         pass
