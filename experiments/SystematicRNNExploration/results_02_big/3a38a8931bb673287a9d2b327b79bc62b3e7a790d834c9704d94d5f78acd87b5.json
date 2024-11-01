@@ -1,0 +1,14 @@
+{
+    "start time": 1730489984.8091352,
+    "old id": "ad0d654a285a87167ec9d9b5de6010a7f2078dfbbe8756614dcc6026012013e2",
+    "use_input_gate": true,
+    "use_forget_gate": true,
+    "use_output_gate": true,
+    "use_state_gate": true,
+    "use_new_state": true,
+    "use_old_state": true,
+    "use_residual": false,
+    "n_layers": 3,
+    "state_size": 256,
+    "id": "3a38a8931bb673287a9d2b327b79bc62b3e7a790d834c9704d94d5f78acd87b5"
+}

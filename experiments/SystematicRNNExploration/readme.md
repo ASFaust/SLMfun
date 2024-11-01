@@ -1,7 +1,11 @@
+from transformers.utils.fx import torch_flip
+
 # Systematic RNN Dynamics Exploration
 I am Exploring the forward dynamics of RNNS in a systematic way. 
 
-## Execution Structure
+## Step 1: Exploring the dynamics of RNNs
+
+To start the training from scratch, the scripts are to be executed in the following order:
 
 1. `init_experiments.py` - Initializes the experiments by creating the file `rnn_configs.json` which contains the configurations of the RNNs to be explored.
 If the file exists already, it only adds the configurations that are not already present in the file. 
@@ -36,17 +40,18 @@ So far it seems that the best results are achieved with
 
 Which is a 2 layer RNN with 256 units per layer, using the forget gate, a standard gated state update, and residual connections.
 But 3 Layer RNNs are close behind. 
-So the forward function of this RNN is:
+So the forward function of one of the 2 layers of this RNN looks like this:
 ```python
 def forward(self,x,state):
     cat_input = torch.cat((x,state),dim=1)
     new_state = torch.tanh(self.linear1(cat_input))
     gate = torch.sigmoid(self.linear2(cat_input))
-    new_state = gate * new_state + (1-gate) * state
+    new_state = gate * new_state + (1-gate) * state # state gating mechanism
     forget_gate = torch.sigmoid(self.linear3(cat_input))
-    new_state = forget_gate * new_state 
-    
-    return new_state
+    new_state = forget_gate * new_state # forget gate
+    output = self.linear4(torch.cat((x,new_state),dim=1)) #residual connection
+    output *= torch.sigmoid(output) # swish activation
+    return output, new_state
 ```
 
 It is surprising that the forget gate is beneficial, while not using gating mechanisms for the input and output is beneficial.
@@ -57,7 +62,7 @@ Also really beautiful to see is that the usage of new_state significantly improv
 This indicates that the network learns temporal dependencies and uses them to predict the next step, even though we are not using any BPTT
 and just alter the new state update based on the loss of the prediction of the next step. This is a very interesting result.
 
-## Step 2: refining the best RNNs
+## Step 2: Refining the best RNNs
 
 After training all sensible configurations and filling the `results_01_all` folder, I will now train the best RNNs:
 * Longer (50000 steps instead of 10000)
