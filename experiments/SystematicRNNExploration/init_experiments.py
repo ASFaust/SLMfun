@@ -3,9 +3,6 @@ from itertools import product
 import os
 import hashlib
 
-from huggingface_hub import file_exists
-
-
 def rnn_layer_config_generator():
     """
     Generator that yields all valid combinations of initialization arguments

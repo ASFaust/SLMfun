@@ -74,7 +74,6 @@ for i, hyperparameter in enumerate(hyperparameters):
     plt.xlabel(hyperparameter)
     plt.ylabel('Final Loss')
     plt.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.7)
-    plt.legend()  # Add legend to show red dot indicates mean
 
 plt.tight_layout()
 plt.savefig('results_01_all_hyperparameters.png')
