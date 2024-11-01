@@ -91,3 +91,22 @@ Finally, the script `examine_results_02_big.py` is executed to examine the resul
 
 
 
+## General findings
+
+* It is surprising that the forget gate is beneficial. My intuition was that the forget gate would delete information that is important later,
+and that rather output gating would be beneficial in order to keep the information that is important for the next step and still not 
+overwhelm the network with information that is not important.
+
+* Including the old state alongside the new state doesn't seem to have a big impact. It's kind of inconclusive wether the addition of the old state
+is beneficial or detrimental. I think in the end it doesn't seem to matter. So we'd rather not add it, as it reduces the number of parameters.
+
+* The state gating mechanism `new_state = gate * new_state + (1-gate) * state` is not as beneficial as I thought it would be. Just computing
+an entirely new state `new_state = torch.tanh(self.linear1(cat_input))` seems to work very well as well.
+This is surprising to me, as i thought again, retaining old information, not changing it too much, would be beneficial. 
+But it seems that the network can learn to retain information that is important for the next step without the explicit state gating mechanism,
+transforming the state entirely. OR we're just so far away from learning any meaningful temporal dependencies that it doesn't matter yet. 
+But that is unlikely, as i have previously generated output at the error levels i encounter here, and they showed clear dependence on 
+distant past inputs. words were generated in the right order, and the network was able to generate the next word based on the previous words.
+
+* Not surprising to me is that residual connections are beneficial. They make the network less deep and thus easier to train.
+

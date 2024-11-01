@@ -61,6 +61,10 @@ for i, hyperparameter in enumerate(hyperparameters):
     values = [r[hyperparameter] for r in cleaned_results]
     losses = [r['min loss'] for r in cleaned_results]
 
+    # filter out losses > 1.9:
+    values = [v for v, loss in zip(values, losses) if loss < 1.9]
+    losses = [loss for loss in losses if loss < 1.9]
+
     # Create the swarm plot
     plt.subplot(3, 3, i + 1)
 
