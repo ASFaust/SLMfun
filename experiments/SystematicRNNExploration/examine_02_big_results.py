@@ -39,7 +39,6 @@ plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.yscale('log')  # Set y-axis to logarithmic scale
 plt.title('Smoothed Training Loss Curves (Log Scale)')
-plt.legend(loc='upper right')
 plt.tight_layout()
 
 # Highlight the best result
