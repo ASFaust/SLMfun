@@ -110,3 +110,7 @@ distant past inputs. words were generated in the right order, and the network wa
 
 * Not surprising to me is that residual connections are beneficial. They make the network less deep and thus easier to train.
 
+* Also not surprising is that the training loss is lower for bigger hidden states, way more so than with more layers. 
+When having 512 hidden states, the training loss is about 1.5, while with 256 hidden states, the training loss is about 1.55.
+This is a clear indication that the network is able to learn more patterns with more hidden states. 
+Maybe we need to try even bigger hidden states to get even better results.

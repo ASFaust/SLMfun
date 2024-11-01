@@ -213,6 +213,36 @@ def forward(self, x):
     input_to_output = torch.cat((x, new_state, new_long_term_state.detach()), dim=1) #in order to not update the long term state with the gradient from the input
     self.state = new_state.detach()
     self.long_term_state = new_long_term_state.detach()
+    
+
+no uh
+
+lets start again, im not satisfied. 
+
+we will use residual things for the first choice:
+
+def forward(self,x):
+    out1 = self.l1(x) #the first prediction is just a markov chain
+    out1 += self.l2(x,last_out) #the second prediction is the first prediction plus the markov chain
+    last_out = out1.detach() #we detach the last output, so that the gradient does not flow back to the first prediction
+    return self.swish(out1)
+
+def forward(self, x):
+    out1 = self.l1(x)  # The first prediction is just a Markov chain
+    state1 = state1 * torch.sigmoid(self.forget_gate(out1, x, state1)) * 0.9  # Decay and forget the state
+    state1 = state1 + self.swish(self.l2((out1, x, state1)))  # Add some information to the state
+    out1 += self.l2((x, state1))
+    return out1
+
+def forward(self, x):
+    out1 = self.l1(x)  # The first prediction is just a Markov chain
+    state1 = state1 * 0.9  # Decay the state to ensure no infinite growth
+    state1_gate = torch.sigmoid(self.state1_view_gate(out1, x, state1))
+    state1_view = state1 * state1_gate #view just the important parts of the state
+    state1 = state1 * (1.0 - state1_gate) + state1_gate * self.l2((out1, x, state1_view))  # Add some information to the state
+    out1 += self.l2(state1_view)
+    state1 = state1.detach()  # Detach the state
+    return self.swish(out1)
 
 """
 

@@ -26,8 +26,9 @@ best_min_loss_result = None
 
 cleaned_results = [r for r in results if 'loss' in r]
 
+top5 = sorted(cleaned_results, key=lambda x: x['min loss'])[:5]
 # Apply Gaussian smoothing and plot each result
-for result in cleaned_results:
+for result in top5:
     smoothed_loss = gaussian_filter1d(result['loss'], sigma=6)  # Smoothing parameter
     plt.plot(smoothed_loss, label=f"Min loss: {result['min loss']:.4f}")
     if result['min loss'] < best_min_loss:
@@ -61,8 +62,8 @@ for i, hyperparameter in enumerate(hyperparameters):
     losses = [r['min loss'] for r in cleaned_results]
 
     # filter out losses > 1.9:
-    values = [v for v, loss in zip(values, losses) if loss < 1.9]
-    losses = [loss for loss in losses if loss < 1.9]
+    values = [v for v, loss in zip(values, losses) if loss < 1.7]
+    losses = [loss for loss in losses if loss < 1.7]
 
     # Create the swarm plot
     plt.subplot(3, 3, i + 1)
