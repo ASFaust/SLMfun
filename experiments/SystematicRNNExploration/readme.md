@@ -113,3 +113,15 @@ distant past inputs. words were generated in the right order, and the network wa
 When having 512 hidden states, the training loss is about 1.5, while with 256 hidden states, the training loss is about 1.55.
 This is a clear indication that the network is able to learn more patterns with more hidden states. 
 Maybe we need to try even bigger hidden states to get even better results.
+
+
+
+
+s_t i_t
+
+f(s_t,s_t-1,i_t,phi) = s_t+1, o_t
+
+f(s_t+1,s_t,i_t+1,phi) = s_t+2, o_t+1
+
+
+
