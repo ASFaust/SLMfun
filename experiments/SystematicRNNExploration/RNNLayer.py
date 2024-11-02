@@ -243,6 +243,17 @@ def forward(self, x):
     out1 += self.l2(state1_view)
     state1 = state1.detach()  # Detach the state
     return self.swish(out1)
+    
+    
+def forward(self, x):
+    out1 = self.l1(x)
+    new_state1 = self.l2((out1, x, self.state1))
+    out1 += new_state1 - self.state1 #this is genius: if no error is predicted by the state, the state is not updated
+    new_state2 = self.l3((out1, x, self.state2))
+    out1 += new_state2 - self.state2
+    self.state1 = new_state1.detach()
+    self.state2 = new_state2.detach()
+    return self.swish(out1)
 
 """
 

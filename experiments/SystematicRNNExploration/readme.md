@@ -83,13 +83,11 @@ Finally, the script `examine_results_02_big.py` is executed to examine the resul
    * `results_02_big_hyperparameters.png` - scatterplot of the influence of the hyperparameters on the results
 
 ## Next Steps In this project
-1. Finish training `training_02_big.py`
-2. Evaluate the results of the second experiment
-3. Evaluate on test data 
-4. Evaluate on multiple runs - so far I only trained each RNN once :D
+1. Evaluate the results of the second experiment
+2. Evaluate on multiple runs - so far I only trained each RNN once :D
+3. Let the RNNs generate text and evaluate the generated text by human evaluation to see where we are at
+4. Evaluate on test data
 5. Evaluate on byte pair encoding data instead of the simple byte level autoregressive language modelling
-
-
 
 ## General findings
 
