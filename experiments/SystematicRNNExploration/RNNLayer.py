@@ -243,8 +243,8 @@ def forward(self, x):
     out1 += self.l2(state1_view)
     state1 = state1.detach()  # Detach the state
     return self.swish(out1)
-    
-    
+
+
 def forward(self, x):
     out1 = self.l1(x)
     new_state1 = self.l2((out1, x, self.state1))

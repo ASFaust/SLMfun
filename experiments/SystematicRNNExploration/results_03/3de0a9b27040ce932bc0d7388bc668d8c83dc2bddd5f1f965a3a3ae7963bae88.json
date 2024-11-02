@@ -1,0 +1,17 @@
+{
+    "start time": 1730555559.807714,
+    "run 1 id": "91dc1c3a268a8a3527cfd8640c88d9b6107d0e7bdf3d93919158c1d9c03fd5af",
+    "run 2 id": "e9626213f1c9d42c286942c4e9cdec2bbf053b40c718ae3741093638e7fcbffb",
+    "use_input_gate": true,
+    "use_forget_gate": true,
+    "use_output_gate": false,
+    "use_state_gate": true,
+    "use_new_state": true,
+    "use_old_state": false,
+    "use_residual": true,
+    "n_layers": 2,
+    "state_size": 512,
+    "common id": "208c3dda147cd28a65c8e38e4dfe0ca6e1227355f38c9db2c708b122718affda",
+    "training": 0,
+    "unique id": "3de0a9b27040ce932bc0d7388bc668d8c83dc2bddd5f1f965a3a3ae7963bae88"
+}

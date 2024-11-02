@@ -85,6 +85,7 @@ Finally, the script `examine_results_02_big.py` is executed to examine the resul
 ## Next Steps In this project
 1. Evaluate the results of the second experiment
 2. Evaluate on multiple runs - so far I only trained each RNN once :D
+    * select the best 5 ones and run them each 10 times for 10k steps 
 3. Let the RNNs generate text and evaluate the generated text by human evaluation to see where we are at
 4. Evaluate on test data
 5. Evaluate on byte pair encoding data instead of the simple byte level autoregressive language modelling
