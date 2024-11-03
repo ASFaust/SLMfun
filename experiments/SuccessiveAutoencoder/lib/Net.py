@@ -1,5 +1,4 @@
 import torch
-from lib.Dense import Dense
 
 #we're doing successive autoencoder again yayy
 #the principle is the following:
