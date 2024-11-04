@@ -2,77 +2,34 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
-def double_stack(list_of_lists):
-    """
-    double stack a list of lists
-    :param list_of_lists:
-    :return: torch.tensor with shape (batch_size, <=max_tokens, token_dim)
-    """
-
-
 class TokenMemoryMachine(nn.Module):
     def __init__(self,
                  batch_size: int,
-                 max_tokens: int,
-                 token_dim: int,
+                 state_size: int,
+                 max_memories: int,
+                 n_concepts: int,
+
                  device
             ):
         self.device = device
         self.max_tokens = max_tokens
         self.token_dim = token_dim
         self.batch_size = batch_size
-        self.token_values = torch.zeros((batch_size, max_tokens, token_dim), device=device)
-        self.token_keys = torch.zeros((batch_size, max_tokens, token_dim), device=device)
-        self.token_usages = torch.zeros((batch_size, max_tokens), device=device)
+        self.concepts = [] #shared between batches actually
+        self.memories = [] #not shared between batches
+        self.concept_usages = []
+        self.memory_usages = []
+        self.state = torch.zeros((batch_size, token_dim), device=device) # this is just a local recurrent state to keep track of the immediate context
 
-    def parse_input(self,x):
-        """
-        parse a new input x into the token memory machine
-        this is done with multi head attention across the token memory machine
-        :param x:
-        :return:
-        """
-        output = self.l_embed(x.detach())
-        min_indices = torch.argmin(self.token_usages, dim=1)
-        self.token_values[range(self.batch_size), min_indices] = output
 
-    def parse_input_query(self,x):
-        """
-        parse the input x into a query
-        :param x:
-        :return:
-        """
-        pass
-
-    def calculate_attention_weights(self, query):
-        """
-        calculate the attention weights
-        :param query:
-        :return:
-        """
-        pass
-
-    def calculate_output(self, attention_weights):
-        """
-        calculate the output
-        :param attention_weights:
-        :return:
-        """
-        pass
-
-    def generate_output(self):
-        """
-        generate an output from the token memory machine
-        :return:
-        """
+    def forward(self,x):
+        #the new memory token gets computed directly from cat[x.detach(),self.state.detach()] and then saved to the memory store
+        #the new state is computed with the insights from the systematic rnn exploration experiment
+        #and any changes to the state are then applied in a residual manner
+        #the changes are compute from the memory store and the concept store.
+        #the concept store is directly trainable, and the memory store only computes anew whatever is needed
         pass
 
     def manage_memory(self):
-        """
-        manage the memory of the token memory machine
-        the memory is managed by removing the least used tokens
-        until the memory is within the max_tokens
-        :return:
-        """
-        #we first get the min value from all token usages that we first double
+        pass
 
