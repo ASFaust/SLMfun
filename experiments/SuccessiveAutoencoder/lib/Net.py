@@ -1,5 +1,4 @@
 import torch
-from lib.Dense import Dense
 
 #we're doing successive autoencoder again yayy
 #the principle is the following:
@@ -14,28 +13,65 @@ from lib.Dense import Dense
 #and we can explore it with optuna to find the best hyperparameters
 
 class Net(torch.nn.Module):
-    def __init__(self,batch_size,input_size,memory_size,device):
+    def __init__(self,
+                 batch_size,
+                 vocab_size,
+                 state_size,
+                 device):
         super(Net, self).__init__()
         self.batch_size = batch_size
-        self.input_size = input_size
-        self.memory_size = memory_size
+        self.vocab_size = vocab_size
+        self.state_size = state_size
         self.device = device
-        self.f = Dense(memory_size+input_size,memory_size,2,device,output_activation="linear")
-        self.g = Dense(memory_size,memory_size+input_size,2,device,output_activation="linear")
-        self.memory = torch.zeros((batch_size,memory_size),device=device)
+        self.f = torch.nn.Sequential(
+            torch.nn.Linear(self.state_size+self.vocab_size,self.state_size),
+            torch.nn.Swish(),
+            torch.nn.Linear(self.state_size,self.state_size),
+            torch.nn.Tanh()
+        )
+
+        self.g1 = torch.nn.Sequential(
+            torch.nn.Linear(self.state_size,self.state_size),
+            torch.nn.Swish(),
+            torch.nn.Linear(self.state_size,self.state_size)
+        )
+
+        self.g2 = torch.nn.Sequential(
+            torch.nn.Linear(self.state_size,self.state_size),
+            torch.nn.Swish(),
+            torch.nn.Linear(self.state_size + self.vocab_size,self.vocab_size)
+        )
+        self.memory = torch.zeros((self.batch_size,self.state_size),device=self.device)
 
     def reset(self):
-        self.memory = torch.zeros((self.batch_size,self.memory_size),device=self.device)
+        self.memory = torch.zeros((self.batch_size,self.state_size),device=self.device)
 
-    def forward(self,x):
-        self.memory = self.memory.detach() #detach the memory to avoid backpropagating through the memory in time
-        x = torch.cat((x,self.memory),1)
-        self.memory = torch.tanh(self.f(x))
-        return self.memory
+    def forward_train(self,x):
+        new_memory = self.f(torch.cat((self.memory,x),dim=1))
+        reconstructed_memory = self.g1(new_memory)
+        reconstructed_input = self.g2(torch.cat((new_memory,x),dim=1))
+        memory_loss = self.compute_memory_loss(reconstructed_memory,self.memory)
+        #x is of shape (batch_size,vocab_size) and is a one-hot encoding of the input
+        #so input loss should be the cross-entropy loss between x and reconstructed_input
+        input_loss = torch.nn.functional.cross_entropy(reconstructed_input,x.argmax(dim=1))
+        self.memory = new_memory.detach() #detach to avoid backpropagating through the memory
+        return memory_loss, input_loss
 
-    def reconstruct(self, noise=0):
-        x = self.g(self.memory + noise * torch.randn_like(self.memory))
-        pred_memory = x[:,:self.memory_size]
-        pred_memory = torch.tanh(pred_memory)
-        pred_input = x[:,self.memory_size:]
-        return pred_memory, pred_input
+    def compute_memory_loss(self, reconstructed_memory, memory):
+        """
+        Compute the memory loss between the reconstructed memory and the memory
+        The loss is akin to the mean squared error between the memory and the reconstructed memory, but we normalize it by the length of the memory
+        to avoid the memory just learning that smaller memory means smaller error
+        Args:
+            reconstructed_memory:
+            memory:
+
+        Returns:
+
+        """
+        eps = 1e-6
+        diff = memory - reconstructed_memory
+        diff = diff ** 2.0
+        memory_length_per_batch = torch.sum(memory ** 2.0,dim=1) + eps
+        loss = torch.sum(diff,dim=1) / memory_length_per_batch
+        return torch.mean(loss)
