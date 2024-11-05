@@ -1,18 +1,26 @@
 import torch
 import torch.nn as nn
-
+import math
 
 class Net(nn.Module):
-    def __init__(self, batch_size, vocab_size, memory_size, hidden_dim, timing_dim, device='cpu'):
+    def __init__(self,
+                 batch_size,
+                 vocab_size,
+                 memory_size,
+                 hidden_dim,
+                 max_timesteps,
+                 decay_alpha,
+                 device='cpu'):
         super(Net, self).__init__()
         # Assign parameters
         self.batch_size = batch_size
         self.vocab_size = vocab_size
         self.memory_size = memory_size
         self.hidden_dim = hidden_dim
-        self.timing_dim = timing_dim
+        self.timing_dim = math.ceil(math.log2(max_timesteps))
+        print("timing dimension: ", self.timing_dim)
         self.device = device
-        self.alpha = 0.95  # Decay factor for surprise
+        self.decay_alpha = decay_alpha  # Decay factor for surprise
 
         # Initialize memory, timings, and surprise tensors
         self.memory = torch.zeros((self.batch_size, self.memory_size, self.vocab_size), device=self.device)
@@ -21,9 +29,11 @@ class Net(nn.Module):
 
         # Initialize the prediction MLP (2-layer MLP)
         self.pred = nn.Sequential(
-            nn.Linear(self.vocab_size * self.memory_size + self.memory_size * self.timing_dim, self.hidden_dim),
-            nn.ReLU(),
-            nn.Linear(self.hidden_dim, self.vocab_size)
+            nn.Linear(self.vocab_size * self.memory_size + self.memory_size * self.timing_dim, self.hidden_dim, device=self.device),
+            nn.SiLU(),
+            nn.Linear(self.hidden_dim, self.hidden_dim, device=self.device),
+            nn.SiLU(),
+            nn.Linear(self.hidden_dim, self.vocab_size, device=self.device)
         )
 
         # Last prediction placeholder
@@ -35,33 +45,33 @@ class Net(nn.Module):
         self.update_memory(x, surprise)  # delete least surprising and oldest memory vectors and add the new memory vector
         pred_logits = self.compute_prediction()  # based on memory
         # compute softmax of pred_logits
-        self.last_prediction = nn.functional.softmax(pred_logits, dim=1)
+        self.last_prediction = nn.functional.softmax(pred_logits, dim=1).detach()
         return pred_logits
 
     def compute_surprise(self, x):
-        # x is tensor of shape (batch_size, vocab_size) and is a one-hot encoding of the input
-        # self.last_prediction is tensor of shape (batch_size, vocab_size) and is the softmax of the last prediction
-        # we need to compute the cross-entropy between x and self.last_prediction
-        # cross-entropy is the negative log-likelihood of the true class
-        surprise = -torch.sum(x * torch.log(self.last_prediction + 1e-6), dim=1)
+        with torch.no_grad():
+            surprise = 1.0 - torch.sum(x * self.last_prediction, dim=1)
         return surprise
 
     def update_memory_timings(self):
-        # the timings are always relative to the current time step
-        self.memory_timings += 1
-        # Decay the surprise of the memory vectors to facilitate saving newer information
-        self.memory_surprise *= self.alpha
+        with torch.no_grad():
+            self.memory_timings += 1
+            # Decay the surprise of the memory vectors to facilitate saving newer information
+            self.memory_surprise *= self.decay_alpha
 
     def update_memory(self, x, surprise):
+        # x has shape (batch_size, vocab_size)
+        # surprise has shape (batch_size,)
         # this finds the least surprising memory vector and replaces it with the new memory vector
         # find the index of the least surprising memory vector, for each batch
-        least_surprising_idx = torch.argmin(self.memory_surprise, dim=1)  # has shape (batch_size,)
-        # replace the least surprising memory vector with the new memory vector
-        self.memory[torch.arange(self.batch_size), least_surprising_idx, :] = x
-        # reset the timings of the least surprising memory vector
-        self.memory_timings[torch.arange(self.batch_size), least_surprising_idx] = 0
-        # and save the surprise of the new memory vector
-        self.memory_surprise[torch.arange(self.batch_size), least_surprising_idx] = surprise
+        with torch.no_grad():
+            least_surprising_idx = torch.argmin(self.memory_surprise, dim=1)  # has shape (batch_size,)
+            # replace the least surprising memory vector with the new memory vector
+            self.memory[torch.arange(self.batch_size), least_surprising_idx, :] = x
+            # reset the timings of the least surprising memory vector
+            self.memory_timings[torch.arange(self.batch_size), least_surprising_idx] = 0
+            # and save the surprise of the new memory vector
+            self.memory_surprise[torch.arange(self.batch_size), least_surprising_idx] = surprise
 
     def compute_prediction(self):
         # compute the prediction based on the memory and timings
@@ -83,11 +93,12 @@ class Net(nn.Module):
 
     def reset(self):
         # Reset memory, timings, and surprise tensors to initial states
-        self.memory = torch.zeros((self.batch_size, self.memory_size, self.vocab_size), device=self.device)
-        self.memory_timings = torch.zeros((self.batch_size, self.memory_size), dtype=torch.long, device=self.device)
-        self.memory_surprise = torch.zeros((self.batch_size, self.memory_size), device=self.device)
-        # Reset last prediction to uniform distribution
-        self.last_prediction = torch.ones((self.batch_size, self.vocab_size), device=self.device) / self.vocab_size
+        with torch.no_grad():
+            self.memory = torch.zeros((self.batch_size, self.memory_size, self.vocab_size), device=self.device)
+            self.memory_timings = torch.zeros((self.batch_size, self.memory_size), dtype=torch.long, device=self.device)
+            self.memory_surprise = torch.zeros((self.batch_size, self.memory_size), device=self.device)
+            # Reset last prediction to uniform distribution
+            self.last_prediction = torch.ones((self.batch_size, self.vocab_size), device=self.device) / self.vocab_size
 
 # Example usage
 if __name__ == "__main__":
@@ -95,12 +106,22 @@ if __name__ == "__main__":
     vocab_size = 10
     memory_size = 5
     hidden_dim = 20
-    timing_dim = 4  # Use 4 bits for timing representation
+    max_timesteps = 10
+    decay_alpha = 0.9
     device = 'cpu'
+    net = Net(batch_size, vocab_size, memory_size, hidden_dim, max_timesteps, device)
+    #x is a one-hot encoded input tensor of shape (batch_size, vocab_size)
+    x = torch.zeros((batch_size, vocab_size), device=device)
+    x[torch.arange(batch_size), torch.randint(0, vocab_size, (batch_size,))] = 1
+    pred_logits = net.forward(x)
+    pred = nn.functional.softmax(pred_logits, dim=1)
 
-    model = Net(batch_size, vocab_size, memory_size, hidden_dim, timing_dim, device)
-    input_data = torch.zeros((batch_size, vocab_size), device=device)
-    input_data[0, 1] = 1  # Example one-hot input
-    output = model(input_data)
-    print(output)
-g
+    print("Memory:")
+    print(net.memory)
+    print("Memory timings:")
+    print(net.memory_timings)
+    print("Memory surprise:")
+    print(net.memory_surprise)
+    print("Prediction:")
+    print(pred)
+
