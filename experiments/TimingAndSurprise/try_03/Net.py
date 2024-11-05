@@ -63,18 +63,18 @@ class Net(nn.Module):
             self.memory_surprise *= self.decay_alpha
 
     def update_memory(self, x, surprise):
-        # x has shape (batch_size, vocab_size)
-        # surprise has shape (batch_size,)
-        # this finds the least surprising memory vector and replaces it with the new memory vector
+        # this is a dummy implementation that tests wether just saving the last n memory vectors is enough to learn
+        # so this doesnt update based on surprise, but just saves the last n memory vectors
+        # by rolling the memory tensor along the memory dimension
+        # and replacing the last memory vector with the new memory vector
         # find the index of the least surprising memory vector, for each batch
         with torch.no_grad():
-            least_surprising_idx = torch.argmin(self.memory_surprise, dim=1)  # has shape (batch_size,)
-            # replace the least surprising memory vector with the new memory vector
-            self.memory[torch.arange(self.batch_size), least_surprising_idx, :] = x
-            # reset the timings of the least surprising memory vector
-            self.memory_timings[torch.arange(self.batch_size), least_surprising_idx] = 0
-            # and save the surprise of the new memory vector
-            self.memory_surprise[torch.arange(self.batch_size), least_surprising_idx] = surprise
+            self.memory = torch.roll(self.memory, 1, dims=1)
+            self.memory_timings = torch.roll(self.memory_timings, 1, dims=1)
+            self.memory_surprise = torch.roll(self.memory_surprise, 1, dims=1)
+            self.memory[:, 0, :] = x
+            self.memory_timings[:, 0] = 0
+            self.memory_surprise[:, 0] = surprise
 
     def compute_prediction(self):
         # compute the prediction based on the memory and timings

@@ -1,0 +1,252 @@
+[
+    {
+        "memory_size": 1,
+        "trial": 0,
+        "id": "c9ddf6d0604919f00720cef07b09461d"
+    },
+    {
+        "memory_size": 1,
+        "trial": 1,
+        "id": "5c294e94da9426394b7f9c9e0a569135"
+    },
+    {
+        "memory_size": 1,
+        "trial": 2,
+        "id": "bdb212a6afec9d31d368b7f80a506342"
+    },
+    {
+        "memory_size": 1,
+        "trial": 3,
+        "id": "61738c4293d4216ad05ae234c6762b63"
+    },
+    {
+        "memory_size": 1,
+        "trial": 4,
+        "id": "f18770fbf4225da586fd86b1329ee7de"
+    },
+    {
+        "memory_size": 2,
+        "trial": 0,
+        "id": "cfcbd8a66c392eebfe7650d01b1bc6c1"
+    },
+    {
+        "memory_size": 2,
+        "trial": 1,
+        "id": "0e7b84fdfa4b2bc599cc462047d1c893"
+    },
+    {
+        "memory_size": 2,
+        "trial": 2,
+        "id": "7727242de349750deee307b53d7343f8"
+    },
+    {
+        "memory_size": 2,
+        "trial": 3,
+        "id": "366cf642de3d1164d54512caa73cab55"
+    },
+    {
+        "memory_size": 2,
+        "trial": 4,
+        "id": "dd48621fbdd6c1f341b516754ebec380"
+    },
+    {
+        "memory_size": 3,
+        "trial": 0,
+        "id": "38499df179304f9be4e374bb2262c8f4"
+    },
+    {
+        "memory_size": 3,
+        "trial": 1,
+        "id": "de9085f08e6dd6384fc5572875d713c0"
+    },
+    {
+        "memory_size": 3,
+        "trial": 2,
+        "id": "734906e4a1ddef3c9e0a3149f3fc2901"
+    },
+    {
+        "memory_size": 3,
+        "trial": 3,
+        "id": "7fc28f0f3702f2eff19b3e67dda12fcd"
+    },
+    {
+        "memory_size": 3,
+        "trial": 4,
+        "id": "7a7e19966e7f86b8077d8f8182234160"
+    },
+    {
+        "memory_size": 4,
+        "trial": 0,
+        "id": "3326c07994d694bc6248da878d5bb7ea"
+    },
+    {
+        "memory_size": 4,
+        "trial": 1,
+        "id": "078deb05990cd3ea84bb627127de08f7"
+    },
+    {
+        "memory_size": 4,
+        "trial": 2,
+        "id": "c832b64fc224b89595c60ec78a8dab8b"
+    },
+    {
+        "memory_size": 4,
+        "trial": 3,
+        "id": "b02ab1dde835e5d3614e460329af0b72"
+    },
+    {
+        "memory_size": 4,
+        "trial": 4,
+        "id": "3d725fbe6d85fbf150edcbc2840e6f5b"
+    },
+    {
+        "memory_size": 5,
+        "trial": 0,
+        "id": "47b5326982122da802eaf85a1afd012d"
+    },
+    {
+        "memory_size": 5,
+        "trial": 1,
+        "id": "3cc5d2ac762105cf9767f129484163e2"
+    },
+    {
+        "memory_size": 5,
+        "trial": 2,
+        "id": "20456d1321f2aace95e77a899165371c"
+    },
+    {
+        "memory_size": 5,
+        "trial": 3,
+        "id": "365f00b5ae0d4845c5e49479b7fd0e01"
+    },
+    {
+        "memory_size": 5,
+        "trial": 4,
+        "id": "0b2da3a44ee1c67fc9f84b56a66cc259"
+    },
+    {
+        "memory_size": 6,
+        "trial": 0,
+        "id": "b1d2784b6385ef090598661e643a2067"
+    },
+    {
+        "memory_size": 6,
+        "trial": 1,
+        "id": "94301bb2e8a80af33bc6b0e812e3fc42"
+    },
+    {
+        "memory_size": 6,
+        "trial": 2,
+        "id": "9a755b0851bae6ab75e0c57710c8a917"
+    },
+    {
+        "memory_size": 6,
+        "trial": 3,
+        "id": "46c1c6f30957669f94660ac997622c06"
+    },
+    {
+        "memory_size": 6,
+        "trial": 4,
+        "id": "80c5ef33324573946b3551c6c3452f34"
+    },
+    {
+        "memory_size": 7,
+        "trial": 0,
+        "id": "7673a70b4a4612f73007790bc7cbb41a"
+    },
+    {
+        "memory_size": 7,
+        "trial": 1,
+        "id": "e9cd94a43a5ea16edc20d73194cf7db7"
+    },
+    {
+        "memory_size": 7,
+        "trial": 2,
+        "id": "0b5cac13f2948c480d58d545ef957496"
+    },
+    {
+        "memory_size": 7,
+        "trial": 3,
+        "id": "3b7b83abf766b120f0c046d05b6fc390"
+    },
+    {
+        "memory_size": 7,
+        "trial": 4,
+        "id": "08bec9024a3d7d14c7b973384a90f5a2"
+    },
+    {
+        "memory_size": 8,
+        "trial": 0,
+        "id": "dd0f8e7d690ab8ee4bc53d185a7b6855"
+    },
+    {
+        "memory_size": 8,
+        "trial": 1,
+        "id": "534e34109f6a8f17189e9f5c69682b2e"
+    },
+    {
+        "memory_size": 8,
+        "trial": 2,
+        "id": "d63c4bc2c1dec63e288cd3d7eae34f4c"
+    },
+    {
+        "memory_size": 8,
+        "trial": 3,
+        "id": "a3a9443c2aada91502a4bfe26c82263c"
+    },
+    {
+        "memory_size": 8,
+        "trial": 4,
+        "id": "73455efefdc9bc3bb6d478776acfd0cc"
+    },
+    {
+        "memory_size": 9,
+        "trial": 0,
+        "id": "9e4912498a6642362b9332e6c56a2263"
+    },
+    {
+        "memory_size": 9,
+        "trial": 1,
+        "id": "99206c2a195321f3e6d2ce2f02379962"
+    },
+    {
+        "memory_size": 9,
+        "trial": 2,
+        "id": "7fd86cfe8b0a66e43f143fb802b7f6e8"
+    },
+    {
+        "memory_size": 9,
+        "trial": 3,
+        "id": "1b62800bcbe9401ca7e804902badd860"
+    },
+    {
+        "memory_size": 9,
+        "trial": 4,
+        "id": "aba37d2920e3f5df5dc605cb0de27ead"
+    },
+    {
+        "memory_size": 10,
+        "trial": 0,
+        "id": "a5efe617a5a74a2c54c2e3415319074d"
+    },
+    {
+        "memory_size": 10,
+        "trial": 1,
+        "id": "81dc104e71ce75a9833bbfc44854553e"
+    },
+    {
+        "memory_size": 10,
+        "trial": 2,
+        "id": "83d8e143331af7c823368463dc59b4a1"
+    },
+    {
+        "memory_size": 10,
+        "trial": 3,
+        "id": "e8b12f079a9138efc14951bc184622d7"
+    },
+    {
+        "memory_size": 10,
+        "trial": 4,
+        "id": "925485cfd9003fbb22241558570395b5"
+    }
+]
