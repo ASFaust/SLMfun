@@ -22,3 +22,15 @@ __pycache__/
 
 #gitignore for notebooks
 .ipynb_checkpoints/
+
+#models
+*.pt
+*.pth
+
+#logs
+**/logs/*
+!logs/.gitkeep
+
+#data
+**/data/*
+!data/.gitkeep
