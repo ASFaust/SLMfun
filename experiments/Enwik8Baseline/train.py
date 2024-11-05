@@ -40,7 +40,7 @@ while True:
         if config['id'] not in result_ids:
             next_config = config
 
-    with open('results.json', 'w') as f:
+    with open(f'results/{next_config["id"]}.json', 'w') as f:
         json.dump(next_config, f, indent=4)
 
     net_params = {

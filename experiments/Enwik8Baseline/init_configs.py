@@ -6,9 +6,11 @@ import hashlib
 #the only values these configs have are the memory sizes
 #the rest of the values are hardcoded in the train.py file
 
-max_memory_size = 10
+min_memory_size = 8
+max_memory_size = 12
+n_training_steps = 100000
 n_tries_per_memory_size = 5
-memory_sizes = list(range(1, max_memory_size + 1))
+memory_sizes = list(range(min_memory_size, max_memory_size + 1))
 
 def get_id(config):
     """
