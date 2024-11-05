@@ -5,11 +5,11 @@ import time
 import json
 import os
 
-history_size = 4000
-device = 'cuda'
-batch_size = 256
-training_steps = 20000
-log_frequency = 50 #how often to save the loss to the json file
+history_size = 100
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+batch_size = 32
+training_steps = 1000000
+log_frequency = 1 #how often to save the loss to the json file
 
 generator = DataGenerator(
     '../../../datasets/enwik8.txt',
@@ -17,12 +17,11 @@ generator = DataGenerator(
     history_size=history_size,
     device=device
 )
-
 net_params = {
     'batch_size': batch_size,
     'vocab_size': 256,
     'memory_size': 16,
-    'hidden_dim': 1024,
+    'hidden_dims': [1024],
     'max_timesteps': history_size,
     'decay_alpha': 0.95
 }
@@ -54,4 +53,10 @@ while i < training_steps:
 
         if i % log_frequency == 0:
             print(f"\r{i}: {ma_loss:.3f}", end='', flush=True)
+    #before resetting, i want to know the ages of the memory vectors
+    #net_memory_timins is of shape (batch_size, memory_size)
+    mean_age = torch.mean(net.memory_timings.float())
+    print(f"\nmean age: {mean_age}")
+    mean_surprise = torch.mean(net.memory_surprise)
+    print(f"mean surprise: {mean_surprise}")
     net.reset()

@@ -1,0 +1,121 @@
+RNN 5000
+
+Warum ist das am ende immer unlogisch??
+weil wir ein timing signal brauchen. ohne das geht es nicht. entweder du sagst mit dem alten state + timedelta den jetzigen input gut voraus, und wenn nicht, dann berechnen wir mit dem jetzigen input einen neuen zustand und machen damit unsere prediciton.
+
+hidden_with_old, new_timedelta1_old = create_hidden(state1,timedelta1)
+pred_with_old = predict(hidden_with_old)
+conf_old = get_confidence(pred_with_old)
+
+new_state1 = create_new_state(state1,timedelta1,x)
+hidden_with_new, new_timedelta1_new = create_hidden(new_state1,0) #0 timedelta because the state was created this timestep.
+pred_with_new = predict(hidden_with_new)
+conf_new = get_confidence(pred_with_new)
+
+#now conf_new and conf_old are values within 0 and 1, and they determine if we use the old or the new state.
+#if the confidence with old is high, we do not update the state to the new state, we just update the timedelta.
+#in this case, it doesn't matter wether the confidence with new is high or low.
+#if it is significantly higher, that means that the the old confidence needs to be low in the first place.
+
+#if the confidence with old is low, and the confidence with new is high, we update the state with the new state
+#but actually we do not care about the new confidence, do we?
+#what if the confidence is mid with the old state, and low with the new state?
+#that shouldn't happen, as the information from the old state is provided to compute the new state
+#how do we learn a timedelta function? with a unitary matrix operation, akin to a first order dynamical system.
+
+conf_old = conf_old.detach() #we dont want any gradient to flow through this, dont we?
+
+state1 = conf_old * state1 + (1.0 - conf_old) * new_state1 #this updates the state
+hidden = hidden_with_old * conf_old + hidden_with_new * (1.0 - conf_old)
+
+#then the next round of residual prediction is done.
+#but does this architecture provide the sought after memory mechanism that saves surprising information?
+#no, it only saves information based on their predictability, which is something else than surprise.
+#fuuuuuuuck
+#oh well. a timing signal turns out to be beneficial and i got a new idea to learn one.
+
+fuck okay let's revisit the original idea. we need to make some alterations to the memory _after_ we observed the input.
+
+so
+
+old_pred = pred(state,old_timedelta)
+
+surprise = x - old_pred
+
+new_memory = surprise * new_memory + (1.0 - surprise) * old_memory.
+
+okay okay, so würde es gehen.
+man müsste die old prediction auch nicht unbedingt neu berechnen. die hat man ja schon berechnet für den letzten output.
+also eigentlich reicht surprise + timing
+weil das beinhaltet alles was man braucht
+also wenn er überrascht wird, speichert er den input ab.
+und sonst predicted er das nächste token mit dem bereits gewussten, indem er das timing signal benutzt.
+ein weiterer aspekt der fehlt wäre computation. also wenn erst etwas berechnet werden muss.
+außerdem scheitert suprise + timing dabei, wenn man eine ganze input-sequenz kopieren soll:
+wenn man die sequenz 000xy000 später wiedergeben soll, dann ist der erste surprise das x, welches abgespeichert wird. dann ist der nächste surprise das y, welches dann in dem
+bisherigen modell direkt x überschreibt.
+also brauchen wir eine liste mit den bisherigen überraschungen, welche die information darstellt. diese liste braucht außerdem timing-signale pro überraschung: wie lange ist es her, dass die überraschung gesehen wurde?
+welche überraschung wird gelöscht? die älteste. dafür wird ein hardgecodeter timestamp verwendet.
+aber hier ist das problem, dass wir keine diskreten "surprising or not" informationen abspeichern.
+sondern jeder input eine kontinuierliche surprise value hat.
+wir können ein threshold setzen, aber der ist ein ungewollter hyperparameter, aber vielleicht muss ich mich damit zufrieden geben vorerst.
+dass man also eine liste führt, mit den letzten n überraschenden inputs. und dazu eine liste, wann diese inputs passiert sind. also ein timing-signal. das timing signal kann man einfach binär verwenden denke ich.
+
+also, wie würde die architektur aussehen dafür?
+
+reset(self):
+  self.memory = [] #enthält die surprises
+  self.old_pred = torch.ones() / sum #enthält die alte vorhersage. wird mit gleichverteilung initialisiert.
+
+init(self):
+  reset()
+  self.thresh = 0.9 #wann ein input abgespeichert wird, wann er überraschend genug war
+
+forward(self,x):
+  surprise = self.compute_surprise(x,self.old_pred)
+  if surprise > self.thresh:
+    self.add_to_memory(x)
+  self.memory = self.time_advance(self.memory)
+  pred = self.compute_prediciton(self.memory)
+  self.old_pred = pred.detach()
+  return pred
+
+das sieht ziemlich einfach aus lol.
+
+
+okay die idee funktioniert. Das ist schonmal gut. das hat die form der token memory machine angenommen. Ich habe jetzt eine idee wie das ganze aussehen muss und verstehe es besser: man braucht 2 unterschiedliche netze: eins um erinnerungen zu konsolidieren und einen für mehrere vorhersagen nützlichen hidden state zu erstellen, und eins um die tatsächliche vorhersage des nächsten tokens zu erstellen. Rekurrente netzwerke machen dabei am meisten in dem konsolidierungsnetzwerk sinn, und diese struktur bietet eine möglichkeit, dass RNN-generierte zustände information lange beibehalten, ohne dass wir durch die zeit ableiten müssen.
+
+man hat eine memory storage m, welche gedächtniszustände zu bestimmten vergangenen zeitpunkten enthalten. man speichert auch die zeit ab, die seitdem vergangen ist, und das input token, dass zu dem zeitpunkt beobachtet wurde.
+
+anschließend führt man das rnn aus: es soll eine neue repräsentation erstellen, auf basis von dem alten zustand und dem token. Dieser repräsentation wird dann ein zeitstempel angehängt. Dies wird für alle memoryvektoren durchgeführt. Die resultierenden vektoren sind diejenigen, die als input für das 2. netzwerk verwendet werden, welches eine vorhersage basierend auf diesen vektoren erstellt. hier fehlt etwas und ist nicht vollständig und vielleicht auch falsch: wie werden die repräsentationen weiter verwendet, um neue gedächtniszustände zu erstellen?
+hier ein 3. netzwerk? oder dasselbe netzwerk, dass den letzten gedächtniszustand bekommt, sowie das zuletzt gelesene token, und einen neuen gedächtniszustand erstellt? der wird sowohl abgespeichert in der gedächtnisliste, als auch als grundlage für den nächsten gedächtniszustand. dabei wird aber dieser zustand detached.
+
+das klingt irgendwie nicht ganz überzeugend.
+
+der forward pass wäre also so:
+
+forward(self,x):
+  self.update_memory(x)
+  output = self.compute_output(self.prepare_memory()) #prepare memory with timing signals etc
+  self.last_pred = self.get_pred(output)
+  return output
+
+update_memory(self,x):
+  surprise = self.compute_surprise(x) #surprise can bootstrap the importance of a memory if we want to go more complex later.
+  self.replace_memory(surprise,x) #replace least surprising memory and save all 3 of those variables into the memory
+  for memory in memories:
+    memory.representation = self.create_new_state(memory.state,memory.x) #this is the training for self.create_new_state.
+  last_memory = self.get_newest_memory()
+  self.last_state = last_memory.representation.detach() #hier zwingen wir praktisch den create_new_state dazu, besonders zeitnah verwandte informationen dem zustand anzuhängen
+  #das könnte man vielleicht durch einen anderen induktiven bias ersetzen, der eher kontextverwandte memory-einträge verschaltet. wie das strukturell zu implementieren ist, sodass
+  #es trainierbar ist, weiß ich aber auch (noch) nicht :^)
+
+replace_memory(self,surprise,state,x):
+  memory = get_least_surprising_memory()
+  memory.surprise = surprise
+  memory.age = 0
+  memory.state = self.last_state.copy()
+  memory.x = x
+
+PUUUH kein zirkelschluss. so könnte es gehen. das ist genau das was ich schon immer wollte: gradientenfluss direkt in beliebig tiefe, weit entfernte gedächtniszustände, ohne BPTT
+

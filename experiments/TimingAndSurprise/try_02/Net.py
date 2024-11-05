@@ -2,66 +2,43 @@ import torch
 import torch.nn as nn
 import math
 
-class DenseNet(nn.Module):
-    def init(self):
-        pass
-    def forward(self,x):
-        pass
+from DenseNetwork import DenseNetwork
 
 class Net(nn.Module):
     def __init__(self,
                  batch_size,
                  vocab_size,
                  memory_size,
-                 n_hidden_layers,
-                 hidden_dim,
-                 decay_alpha,
+                 hidden_dims,
                  max_timesteps,
-                 use_binary_timing,
-                 use_normalized_timing,
-                 surprise_measure,
-                 sort_memory,
-                 use_gating,
+                 decay_alpha,
                  device='cpu'):
         super(Net, self).__init__()
         # Assign parameters
         self.batch_size = batch_size
         self.vocab_size = vocab_size
         self.memory_size = memory_size
-        self.hidden_dim = hidden_dim
-        self.n_hidden_layers = n_hidden_layers
-
+        self.hidden_dim = hidden_dims
+        self.timing_dim = math.ceil(math.log2(max_timesteps))
+        print("timing dimension: ", self.timing_dim)
         self.device = device
         self.decay_alpha = decay_alpha  # Decay factor for surprise
 
-        if use_binary_timing:
-            self.timing_dim = math.ceil(math.log2(max_timesteps))
-            print("timing dimension: ", self.timing_dim)
-
-        self.use_normalized_timing = use_normalized_timing
-        self.use_binary_timing = use_binary_timing
-        self.surprise_measure = surprise_measure
-        self.use_gating = use_gating
-        self.sort_memory = sort_memory
-
         # Initialize memory, timings, and surprise tensors
         self.memory = torch.zeros((self.batch_size, self.memory_size, self.vocab_size), device=self.device)
-        self.memory_timings = torch.zeros((self.batch_size, self.memory_size), device=self.device)  # Use integer representation for timings
+        self.memory_timings = torch.zeros((self.batch_size, self.memory_size), dtype=torch.long, device=self.device)
         self.memory_surprise = torch.zeros((self.batch_size, self.memory_size), device=self.device)
 
-        # Initialize the prediction MLP
-        self.single_input_dim = self.vocab_size
-        if self.use_normalized_timing:
-            self.single_input_dim += 1 # add one more dimension for the normalized timing
-        if self.use_binary_timing:
-            self.single_input_dim += self.timing_dim
-        self.net = DenseNet(self.single_input_dim * self.memory_size, self.hidden_dim, self.n_hidden_layers, self.vocab_size, use_gating=self.use_gating, device=self.device)
+        # +1 for normalized timing
+        # +1 for surprise
+        input_size = (self.vocab_size + self.timing_dim + 1 + 1) * self.memory_size
+
+        print(f"input size: {input_size}")
+
+        self.pred_mlp = DenseNetwork(input_size, hidden_dims, vocab_size, "gated", True, device)
 
         # Last prediction placeholder
         self.last_prediction = torch.ones((self.batch_size, self.vocab_size), device=self.device) / self.vocab_size
-        self.last_prediction_logits = torch.zeros((self.batch_size, self.vocab_size), device=self.device) # ???
-
-        assert self.surprise_measure in ['naive', 'cross_entropy', 'kl_divergence'], "Valid surprise measures are 'naive', 'cross_entropy', and 'kl_divergence'"
 
     def forward(self, x):
         surprise = self.compute_surprise(x)
@@ -70,20 +47,11 @@ class Net(nn.Module):
         pred_logits = self.compute_prediction()  # based on memory
         # compute softmax of pred_logits
         self.last_prediction = nn.functional.softmax(pred_logits, dim=1).detach()
-        self.last_prediction_logits = pred_logits.detach()
         return pred_logits
 
     def compute_surprise(self, x):
         with torch.no_grad():
-            if self.surprise_measure == 'naive':
-                surprise = 1.0 - torch.sum(x * self.last_prediction, dim=1)
-            elif self.surprise_measure == 'cross_entropy':
-                surprise = nn.functional.cross_entropy(self.last_prediction_logits, x.argmax(dim=1))
-            elif self.surprise_measure == 'kl_divergence':#
-                #kl div documentation: input (Tensor) – Tensor of arbitrary shape in log-probabilities.
-                surprise = nn.functional.kl_div(self.last_prediction_logits, x, reduction='none').sum(dim=1)
-            else:
-                raise ValueError("Invalid surprise measure")
+            surprise = torch.sum(torch.abs(x - self.last_prediction), dim=1)
         return surprise
 
     def update_memory_timings(self):
@@ -118,10 +86,18 @@ class Net(nn.Module):
         # flatten and concat the two tensors
         sorted_memory = sorted_memory.view(self.batch_size, -1)
         sorted_timings_binary = sorted_timings_binary.view(self.batch_size, -1)
-        # concatenate the two tensors
-        pred_input = torch.cat((sorted_memory, sorted_timings_binary), dim=1)
+
+        sorted_normalized_timings = sorted_timings.float() / (
+                    sorted_timings.max(dim=1, keepdim=True)[0].expand(-1, self.memory_size).float() + 1)
+        sorted_normalized_timings = sorted_normalized_timings.view(self.batch_size, -1)
+
+        sorted_surprise = self.memory_surprise[torch.arange(self.batch_size)[:, None], sorted_indices]
+        sorted_surprise = sorted_surprise.view(self.batch_size, -1)
+
+        # concatenate the tensors
+        pred_input = torch.cat((sorted_memory, sorted_timings_binary, sorted_normalized_timings, sorted_surprise), dim=1)
         # compute the prediction
-        pred_logits = self.pred(pred_input)
+        pred_logits = self.pred_mlp(pred_input)
         return pred_logits
 
     def reset(self):
@@ -132,8 +108,6 @@ class Net(nn.Module):
             self.memory_surprise = torch.zeros((self.batch_size, self.memory_size), device=self.device)
             # Reset last prediction to uniform distribution
             self.last_prediction = torch.ones((self.batch_size, self.vocab_size), device=self.device) / self.vocab_size
-            self.last_prediction_logits = torch.zeros((self.batch_size, self.vocab_size), device=self.device)
-
 
 # Example usage
 if __name__ == "__main__":
