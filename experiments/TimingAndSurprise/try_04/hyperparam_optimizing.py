@@ -10,7 +10,7 @@ import numpy as np
 # Set device and common parameters
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 history_size = 2000
-training_time_per_trial = 20 # 20 seconds - just to test the code
+training_time_per_trial = 60 * 5 # 5 minutes of training per trial
 log_frequency = 50
 
 
