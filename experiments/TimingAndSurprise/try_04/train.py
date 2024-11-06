@@ -4,6 +4,7 @@ import torch
 import time
 import json
 import os
+import wandb
 
 history_size = 2000
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -28,10 +29,17 @@ net_params = {
 
 net = Net(**net_params, device=device)
 
-#cross entropy loss that expects a target index and logit output
-loss_fn = torch.nn.CrossEntropyLoss()
+wandb.init(project="TimingAndSurprise")
 
-optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
+wandb.watch(net)
+
+
+wandb.config.update(net_params)
+
+#cross entropy loss that expects a target index and logit output
+loss_fn = torch.nn.CrossEntropyLoss(label_smoothing=0.01) #label smoothing to prevent nan loss
+
+optimizer = torch.optim.Adam(net.parameters(), lr=0.002)
 
 i = 0
 ma_loss = 3.0
@@ -53,6 +61,7 @@ while i < training_steps:
 
         if i % log_frequency == 0:
             print(f"\r{i}: {ma_loss:.3f}", end='', flush=True)
-
+            wandb.log({"loss": ma_loss})
+            wandb.log({"memory": net.memory[0].detach().cpu().numpy()})
     net.reset()
     net.save("models/net.pt")
