@@ -228,7 +228,7 @@ def main():
     """
     Main function to run the Optuna study.
     """
-    study = optuna.create_study(direction="minimize", storage="sqlite:///optuna_study.db", load_if_exists=True)
+    study = optuna.create_study(direction="minimize", storage="sqlite:///optuna_study.db", load_if_exists=True, study_name="no-name-f1b1926e-7319-45ff-9b24-d31b65de35e1")
     study = create_initial_trials(study)
     study.optimize(objective, timeout=60 * 60 * 12)  # 12 hours timeout
 
