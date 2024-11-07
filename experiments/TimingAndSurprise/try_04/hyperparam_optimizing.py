@@ -179,17 +179,20 @@ def objective(trial):
 
 def create_initial_trials(study):
     initial_params = []
-    useful_batch_sizes = [64,256]
+    useful_batch_sizes = [64, 256]
     useful_memory_sizes = [4, 16]
     useful_memory_dims = [256, 512]
     useful_hidden_dims = [256, 512]
     useful_num_layers = [2]
-    useful_use_tanh = [True, False]
-    for batch_size, memory_size, memory_dim, hidden_dims, num_layers, use_tanh in product(
-            useful_batch_sizes, useful_memory_sizes, useful_memory_dims, useful_hidden_dims, useful_num_layers, useful_use_tanh):
+    useful_use_tanh = [False]
+    useful_lr = [0.001, 0.01]
+    for batch_size, memory_size, memory_dim, hidden_dims, num_layers, use_tanh, lr in product(
+            useful_batch_sizes, useful_memory_sizes, useful_memory_dims, useful_hidden_dims, useful_num_layers, useful_use_tanh, useful_lr):
+        if hidden_dims < memory_dim:
+            continue # skip this, because memory_dim < hidden_dims is not logical
         initial_params.append({
             'batch_size': batch_size,
-            'lr': 0.001,
+            'lr': lr,
             'memory_size': memory_size,
             'memory_dim': memory_dim,
             'hidden_dims': hidden_dims,
