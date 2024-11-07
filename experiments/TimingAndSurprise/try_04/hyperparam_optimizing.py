@@ -27,8 +27,8 @@ def get_hyperparameters(trial):
         'batch_size': trial.suggest_int("batch_size", 32, 512, log=True),
         'lr': trial.suggest_float("lr", 1e-4, 1e-1, log=True), # Learning rate from 0.0001 to 0.1
         'memory_size': trial.suggest_int("memory_size", 4, 32, log=True),
-        'memory_dim': trial.suggest_int("memory_dim", 64, 1024, log=True),
-        'hidden_dims': trial.suggest_int("hidden_dims", 128, 4096, log=True),
+        'memory_dim': trial.suggest_int("memory_dim", 128, 1024, log=True),
+        'hidden_dims': trial.suggest_int("hidden_dims", 512, 4096, log=True),
         'num_layers': trial.suggest_int("num_layers", 1, 3),
         'use_tanh': trial.suggest_categorical("use_tanh", [True, False])
     }
@@ -102,7 +102,7 @@ def train_epoch(generator, net, loss_fn, optimizer, start_time, ma_loss):
                 return i, loss, False  # Indicate failure
 
             loss_value = loss.item()
-            ma_loss = 0.99 * ma_loss + 0.01 * loss_value
+            ma_loss = 0.999 * ma_loss + 0.001 * loss_value
 
             if i % log_frequency == 0:
                 time_since_start = time.time() - start_time
@@ -230,7 +230,7 @@ def main():
     """
     study = optuna.create_study(direction="minimize", storage="sqlite:///optuna_study.db", load_if_exists=True)
     study = create_initial_trials(study)
-    study.optimize(objective, timeout=60 * 60 * 6)  # 6 hours timeout
+    study.optimize(objective, timeout=60 * 60 * 12)  # 12 hours timeout
 
     # Save study results
     with open("optuna_study_results.json", "w") as f:
