@@ -45,7 +45,6 @@ i = 0
 ma_loss = 3.0
 while i < training_steps:
     x, targets = generator.get_batch()
-    # x is a tensor of shape (batch_size, history_size, 256)
     for j in range(x.shape[1] - 1):
         i += 1
         pred = net.forward(x[j])
