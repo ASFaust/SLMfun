@@ -13,8 +13,8 @@ relevant_keys = ["batch_size","memory_size","memory_dim","hidden_dims","use_tanh
 
 for fname in files:
     model = torch.load(f'models/{fname}')
-    if "vocab_size" in model.keys():
-        print(f"{fname} is already updated")
+    if not "_trial_" in fname:
+        print(f"{fname} is not from the optuna study")
         continue
     trial_number = int(fname.split('_')[2].split('.')[0])
     # get the trial from the study
@@ -26,4 +26,6 @@ for fname in files:
     net_dict["vocab_size"] = 256
     print(net_dict)
     net = Net(**net_dict)
+    net.memory_mlp.load_state_dict(model["memory_mlp"]) #fucked it up with missing those lines - replaced the models with ass shit lmao
+    net.pred_mlp.load_state_dict(model["pred_mlp"])
     net.save(f'models/{fname}') # overwrite the model with the new one

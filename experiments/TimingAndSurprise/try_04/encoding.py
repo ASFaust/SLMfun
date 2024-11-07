@@ -61,12 +61,4 @@ def decode_string(encoded_tensor):
     # Find original byte values
     byte_values = np.argmax(decoded_np, axis=1).tolist()
 
-    # Convert byte values to a byte array.
-    byte_arr = bytearray(byte_values)
-
-    # Convert byte array to UTF-8 string. ignore errors because some byte values are invalid
-    #decoded_str = byte_arr.decode('utf-8')
-
-    decoded_str = byte_arr.decode('utf-8', errors='ignore')
-
-    return decoded_str
+    return bytearray(byte_values)

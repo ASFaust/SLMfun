@@ -95,5 +95,4 @@ class Net(nn.Module):
             net.pred_mlp.load_state_dict(load_dict["pred_mlp"])
             return net
         else:
-            #torch.save(net.state_dict(), path) was used to save the model
-            model = torch.load(path) #does this work?
+            raise Exception("Model not compatible with this version of the code")
