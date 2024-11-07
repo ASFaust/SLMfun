@@ -33,30 +33,21 @@ def sample_from_logits(logits, temperature=1.0, top_k=8):
     sampled_index = top_k_indices[0, sampled_index_in_top_k]
     return index_to_onehot(sampled_index)
 
-def encode_string(to_encode, device, truncate = True):
+
+def encode_string(to_encode, device):
     """
-    Encodes a unicode string of l bytes into a one-hot tensor of shape [l, 256]
-    :param to_encode:
-    :param device:
-    :param truncate: If true, the returned tensor will be truncated to the length of the string.
-    Some unicode characters take more than one byte, so the length of the string is not necessarily the same as the number of bytes.
-    :return:
+    Encodes a unicode string into a one-hot tensor of shape [l, 256] with float32 type.
+    :param to_encode: bytes to encode
+    :param device: Device to store the tensor on
     """
-    to_encode_len = len(to_encode)
-    # Convert string to bytes
-    encoded = list(to_encode.encode('utf-8'))
+    # Encode the string to bytes and convert directly to a PyTorch tensor
+    encoded_bytes = torch.tensor(list(to_encode), dtype=torch.long, device=device)
 
-    # Convert each byte to a one-hot vector
-    encoded = np.eye(256)[encoded]
+    # Create a one-hot encoded tensor in float32
+    one_hot_encoded = torch.zeros((encoded_bytes.size(0), 256), dtype=torch.float32, device=device)
+    one_hot_encoded.scatter_(1, encoded_bytes.unsqueeze(1), 1.0)
 
-    if truncate:
-        encoded = encoded[-to_encode_len:]
-
-    # Convert to a PyTorch tensor
-    encoded = torch.from_numpy(encoded).float().to(device)
-
-    #return shape is [to_encode_len, 256]
-    return encoded
+    return one_hot_encoded
 
 def decode_string(encoded_tensor):
     """

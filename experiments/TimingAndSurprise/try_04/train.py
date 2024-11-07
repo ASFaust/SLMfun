@@ -44,14 +44,12 @@ optimizer = torch.optim.Adam(net.parameters(), lr=0.002)
 i = 0
 ma_loss = 3.0
 while i < training_steps:
-    x, _ = generator.get_batch()
+    x, targets = generator.get_batch()
     # x is a tensor of shape (batch_size, history_size, 256)
     for j in range(x.shape[1] - 1):
         i += 1
-        inputs = x[:,j].to(device)
-        targets = x[:,j+1].argmax(dim=1).to(device)
-        pred = net.forward(inputs)
-        loss = loss_fn(pred, targets)
+        pred = net.forward(x[j])
+        loss = loss_fn(pred, targets[j])
 
         optimizer.zero_grad()
         loss.backward()
