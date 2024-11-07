@@ -1,5 +1,6 @@
 import optuna
 from llvmlite.binding import initialize
+from transformers import TransfoXLLMHeadModel
 
 from DataGenerator import DataGenerator
 from Net import Net
@@ -60,11 +61,11 @@ def create_model(net_params):
     return Net(**model_params, device=device)
 
 
-def handle_nan_inf_loss(trial, retry_count, max_retries, net_params):
+def handle_nan_inf_loss(trial, net_params):
     """
     Handle NaN/Inf loss by resetting the model and optimizer.
     """
-    print(f"\nEncountered NaN/Inf loss, retrying trial ({retry_count + 1}/{max_retries})...")
+    print(f"\nEncountered NaN/Inf loss, retrying trial")
     net = create_model(net_params)  # Reset the model
     optimizer = torch.optim.Adam(net.parameters(), lr=net_params["lr"])  # Reset the optimizer
     return net, optimizer
@@ -124,23 +125,34 @@ def train_model(trial, generator, net, loss_fn, optimizer):
     Train the model within the allotted time per trial.
     Handle NaN/Inf loss scenarios with retries.
     """
-    max_retries = 5
-    retry_count = 0
+    wasted_time = 0
+    n_fails = 0
     ma_loss = 3.0  # Initialize moving average loss
 
-    while retry_count < max_retries:
+    while True:
         start_time = time.time()
         i, final_loss, success = train_epoch(generator, net, loss_fn, optimizer, start_time, ma_loss)
 
         if success:
+            #save the model
+            model_path = f"models/net_trial_{trial.number}.pt"
+            torch.save(net.state_dict(), model_path)
             return final_loss
         else:
-            retry_count += 1
-            net, optimizer = handle_nan_inf_loss(trial, retry_count, max_retries, trial.user_attrs["net_params"])
+            n_fails += 1
+            if n_fails > 10:
+                print(f"\nTrial {trial.number} failed due to retry limit")
+                break
+            wasted_time += (time.time() - start_time)
+            if wasted_time > training_time_per_trial:
+                print(f"\nTrial {trial.number} failed due to time limit")
+                break
+            print(f"\nTrial {trial.number} failed. Total time wasted so far: {wasted_time:.2f} seconds")
+            print(f"Time willing to waste yet: {training_time_per_trial - wasted_time:.2f} seconds")
+            net, optimizer = handle_nan_inf_loss(trial, trial.user_attrs["net_params"])
             ma_loss = 3.0
 
-    # If maximum retries are reached, stop the trial
-    print("\nMaximum retries reached. Stopping trial.")
+    print(f"\nTrial {trial.number} failed")
     return fail_loss
 
 
@@ -170,22 +182,18 @@ def objective(trial):
     # Train the model
     final_loss = train_model(trial, generator, net, loss_fn, optimizer)
 
-    # Save the model for the best trial
-    model_path = f"models/net_trial_{trial.number}.pt"
-    torch.save(net.state_dict(), model_path)
-
     return final_loss
 
 
 def create_initial_trials(study):
     initial_params = []
-    useful_batch_sizes = [64, 256]
-    useful_memory_sizes = [4, 16]
-    useful_memory_dims = [256, 512]
-    useful_hidden_dims = [256, 512]
+    useful_batch_sizes = [256]
+    useful_memory_sizes = [8]
+    useful_memory_dims = [256]
+    useful_hidden_dims = [1024]
     useful_num_layers = [2]
     useful_use_tanh = [False]
-    useful_lr = [0.001, 0.01]
+    useful_lr = [0.001]
     for batch_size, memory_size, memory_dim, hidden_dims, num_layers, use_tanh, lr in product(
             useful_batch_sizes, useful_memory_sizes, useful_memory_dims, useful_hidden_dims, useful_num_layers, useful_use_tanh, useful_lr):
         if hidden_dims < memory_dim:
