@@ -68,22 +68,32 @@ class Net(nn.Module):
             "memory_size": self.memory_size,
             "memory_dim": self.memory_dim,
             "hidden_dims": self.hidden_dim,
+            "use_tanh": self.use_tanh,
             "memory_mlp": self.memory_mlp.state_dict(),
             "pred_mlp": self.pred_mlp.state_dict(),
         }
         torch.save(save_dict, path)
 
     @staticmethod
-    def load(path, batch_size=None, device=None):
+    def load(path, use_tanh = False, batch_size=None, device=None):
         load_dict = torch.load(path)
         if device is None:
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        net = Net(load_dict["batch_size"] if batch_size is None else batch_size,
-                  load_dict["vocab_size"],
-                  load_dict["memory_size"],
-                  load_dict["memory_dim"],
-                  load_dict["hidden_dims"],
-                  device=device)
-        net.memory_mlp.load_state_dict(load_dict["memory_mlp"])
-        net.pred_mlp.load_state_dict(load_dict["pred_mlp"])
-        return net
+        if "vocab_size" in load_dict: #custom as above.
+            if not "use_tanh" in load_dict:
+                print("use_tanh not found in the model, defaulting to False. If model output seems garbage, try loading with use_tanh=True")
+                load_dict["use_tanh"] = use_tanh
+
+            net = Net(load_dict["batch_size"] if batch_size is None else batch_size,
+                      load_dict["vocab_size"],
+                      load_dict["memory_size"],
+                      load_dict["memory_dim"],
+                      load_dict["hidden_dims"],
+                      use_tanh=load_dict["use_tanh"],
+                      device=device)
+            net.memory_mlp.load_state_dict(load_dict["memory_mlp"])
+            net.pred_mlp.load_state_dict(load_dict["pred_mlp"])
+            return net
+        else:
+            #torch.save(net.state_dict(), path) was used to save the model
+            model = torch.load(path) #does this work?

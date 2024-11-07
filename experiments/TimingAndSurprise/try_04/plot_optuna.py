@@ -2,6 +2,7 @@ import optuna
 from optuna import create_study
 from optuna.trial import TrialState
 from optuna.visualization import plot_optimization_history, plot_param_importances, plot_parallel_coordinate, plot_slice, plot_contour
+from optuna.importance import FanovaImportanceEvaluator
 import matplotlib.pyplot as plt
 
 # Load the original study
@@ -12,12 +13,15 @@ original_study = optuna.load_study(study_name=original_study_name, storage="sqli
 temp_study = create_study(direction="minimize")
 for trial in original_study.trials:
     if trial.state == TrialState.COMPLETE:
-        capped_value = min(trial.value, 2) if trial.value is not None else None
+        if trial.value is not None and trial.value > 2:
+            continue # Skip trials with objective values greater than 2
+        #else
+        #capped_value = min(trial.value, 2) if trial.value is not None else None
         temp_study.add_trial(
             optuna.trial.create_trial(
                 params=trial.params,
                 distributions=trial.distributions,
-                value=capped_value,
+                value=trial.value,
                 state=trial.state
             )
         )
@@ -27,9 +31,16 @@ fig1 = plot_optimization_history(temp_study)
 fig1.update_layout(title="Optimization History with Objective Values Capped at 4")
 fig1.show()
 
-# Plot parameter importances
-fig2 = plot_param_importances(temp_study)
-fig2.update_layout(title="Parameter Importances with Capped Objective Values")
+# Instantiate FANOVA evaluator
+fanova_evaluator = FanovaImportanceEvaluator()
+
+# Calculate and display parameter importances using FANOVA
+param_importances = fanova_evaluator.evaluate(temp_study)
+print("Parameter importances with FANOVA:", param_importances)
+
+# Plot parameter importances using FANOVA
+fig2 = plot_param_importances(temp_study, evaluator=fanova_evaluator)
+fig2.update_layout(title="Parameter Importances with Capped Objective Values (FANOVA)")
 fig2.show()
 
 # Parallel coordinate plot

@@ -136,7 +136,7 @@ def train_model(trial, generator, net, loss_fn, optimizer):
         if success:
             #save the model
             model_path = f"models/net_trial_{trial.number}.pt"
-            torch.save(net.state_dict(), model_path)
+            net.save(model_path) # Save the model + its hyperparameters. why the f does torch.save not do this and why do we need to do this manually???
             return final_loss
         else:
             n_fails += 1
