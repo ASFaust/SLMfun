@@ -38,3 +38,31 @@ class Net(nn.Module):
     def reset(self):
         self.memory = torch.zeros((self.batch_size, self.memory_size, self.vocab_size), device=self.device)
 
+    def save(self, path):
+        save_dict = {
+            'batch_size': self.batch_size,
+            'vocab_size': self.vocab_size,
+            'memory_size': self.memory_size,
+            'hidden_dims': self.hidden_dim,
+            'device': self.device,
+            'state_dict': self.state_dict()
+        }
+        torch.save(save_dict, path)
+
+    @staticmethod
+    def load(path, batch_size=None, device=None):
+        if device is None:
+            device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        load_dict = torch.load(path, map_location=device)
+        if batch_size is not None:
+            load_dict['batch_size'] = batch_size
+        net = Net(
+            load_dict['batch_size'],
+            load_dict['vocab_size'],
+            load_dict['memory_size'],
+            load_dict['hidden_dims'],
+            device
+        )
+        net.load_state_dict(load_dict['state_dict'])
+        return net
