@@ -17,8 +17,8 @@ use_tanh: False
 
 history_size = 2000
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-batch_size = 512
-training_time = 60 * 30 # 30 minutes of training - we do that later. i want to play games now
+batch_size = 1024
+training_time = 60 * 60 * 2 # 30 minutes of training - we do that later. i want to play games now
 log_frequency = 50 #how often to save the loss to the json file
 
 generator = DataGenerator(
@@ -32,8 +32,8 @@ net_params = {
     'batch_size': batch_size,
     'vocab_size': 256,
     'memory_size': 12,
-    'memory_dim': 558,
-    'hidden_dims': [629],
+    'memory_dim': 1024,
+    'hidden_dims': [1024,1024],
 }
 
 net = Net(**net_params, device=device)
