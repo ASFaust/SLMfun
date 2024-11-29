@@ -18,7 +18,7 @@ class TargetPropagationReLU:
         with torch.no_grad():
             #min_per_batch = torch.min(x_prime, dim=1, keepdim=True)[0]
             #ret = x_prime + min_per_batch #this guarantees that the target is always positive. kind of a hack lmao
-            ret = torch.relu(x_prime) #this is cleaner
+            ret = torch.relu(x_prime)
             return ret
 
     def backward(self, y_prime):
@@ -31,7 +31,7 @@ class TargetPropagationReLU:
             # Initialize target
             target = torch.zeros_like(self.input)
             target[y_prime > 0] = y_prime[y_prime > 0] #here we need to enforce that the target is correct.
-            target[y_prime <= 0] = torch.clamp_max(self.input[y_prime <= 0], 0.0) #this is the same as the onehot layer.
+            target[y_prime <= 0] = torch.clamp_max(self.input[y_prime <= 0], 0.0) #here we dont need to enforce anything except that the output is <= 0.
 
         # Call backward on input_hook with the computed target
         self.input_hook.backward(target)

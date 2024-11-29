@@ -11,7 +11,7 @@ class TargetPropagationLinear:
         self.y = None  # To store output during forward pass
         self.x = None  # To store input during forward pass
         self.epsilon = epsilon
-        #self.acc_w = torch.zeros_like(self.w)
+        self.acc_w = torch.zeros_like(self.w)
 
     def __call__(self, x):
         """
@@ -73,11 +73,11 @@ class TargetPropagationLinear:
             x_double_prime_exp = x_double_prime.unsqueeze(1)  # (batch_size, 1, in_features)
             delta_w = (update_factor * x_double_prime_exp).mean(dim=0)  # (out_features, in_features)
 
-            #self.acc_w *= 0.9
-            #self.acc_w += delta_w
+            self.acc_w *= 0.9
+            self.acc_w += delta_w
 
             #print("max abs delta_w", torch.max(torch.abs(delta_w)))
-            self.w += delta_w
+            self.w += delta_w  #self.acc_w * 0.01
 
         self.input_hook.backward(x_double_prime)  # Call backward on the input hook with the feasible target
 
