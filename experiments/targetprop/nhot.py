@@ -27,7 +27,7 @@ class TargetPropagationNhot:
     def get_ft(self, x_prime):
         """
         Computes the feasible target x'' for the current layer.
-        For a onehot layer, the feasible target is the same as its forward pass.
+        For a nhot layer, the feasible target is the same as its forward pass.
         """
         self.x_prime = x_prime
         return self.__call__(x_prime)
