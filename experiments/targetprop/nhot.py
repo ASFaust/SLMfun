@@ -2,7 +2,7 @@ import torch
 #this is a n-hot function for target propagation
 #it activates the n largest values in the input and sets the rest to 0
 
-class TargetPropagationOnehot:
+class TargetPropagationNhot:
     def __init__(self, input_hook, n):
         self.input_hook = input_hook
         self.input = None  # To store input during forward pass
