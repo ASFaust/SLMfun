@@ -35,8 +35,8 @@ class TargetPropagationOnehot:
 
     def backward(self, y_prime):
         with torch.no_grad():
-            ret = self.input.clone()
-            ret[self.output == 1] = self.input[y_prime == 1]
-            ret[y_prime == 1] = self.input[self.output == 1]
+            ret = y_prime.clone()
+            #ret[self.output == 1] = self.input[y_prime == 1]
+            #ret[y_prime == 1] = self.input[self.output == 1]
 
             self.input_hook.backward(ret)

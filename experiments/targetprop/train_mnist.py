@@ -12,12 +12,12 @@ transform = transforms.Compose([
 train_dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
 
 # Create DataLoader for batching
-train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 
 # Instantiate your custom network
 net = Net()
 
-epochs = 500
+epochs = 10
 
 ma_acc = 0.0
 
@@ -47,3 +47,6 @@ for epoch in range(epochs):
         ma_acc = 0.999 * ma_acc + 0.001 * accuracy
         print(f"\rEpoch {epoch}, Step {batch_idx}, Accuracy {ma_acc}", end='', flush=True)
 
+#save net.linear1.w as a numpy array to disk
+import numpy as np
+np.save('linear1_w.npy', net.linear1.w.detach().cpu().numpy())

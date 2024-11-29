@@ -16,7 +16,11 @@ class TargetPropagationReLU:
 
     def get_ft(self, x_prime):
         with torch.no_grad():
-            return torch.relu(x_prime) # feasible target is the ReLU of the target itself
+            ret = torch.relu(x_prime) # feasible target is the ReLU of the target itself
+            # uhh, the feasible target should be normalized to 1.0
+            # ret_len = torch.norm(ret, dim=1, keepdim=True)
+            # ret = ret / ret_len
+            return ret
 
     def backward(self, y_prime):
         """

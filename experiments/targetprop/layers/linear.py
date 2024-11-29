@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class TargetPropagationLinear:
     def __init__(self, in_features, out_features, input_hook, epsilon=1e-8):
         # Adjusted the weight shape to (out_features, in_features)
-        self.w = torch.randn((out_features, in_features), requires_grad=False)
+        self.w = torch.randn((out_features, in_features), requires_grad=False) * 0.001
         self.input_hook = input_hook
         self.y = None  # To store output during forward pass
         self.x = None  # To store input during forward pass
@@ -47,6 +47,7 @@ class TargetPropagationLinear:
             # Expand dimensions to allow broadcasting
             delta_y_exp = delta_y.unsqueeze(2)  # (batch_size, out_features, 1)
             w_exp = self.w.unsqueeze(0)  # (1, out_features, in_features)
+
             delta_x = delta_y_exp * w_exp  # (batch_size, out_features, in_features)
 
             # Compute x': mean over neurons (out_features dimension)
@@ -64,7 +65,7 @@ class TargetPropagationLinear:
 
             # Compute denominator: ||x''||^2
             x_double_prime_norm_sq = x_double_prime.pow(2).sum(dim=1, keepdim=True)  # (batch_size, 1)
-            x_double_prime_norm_sq = x_double_prime_norm_sq + self.epsilon
+            x_double_prime_norm_sq = x_double_prime_norm_sq #+ self.epsilon
 
             # Compute update factor
             update_factor = delta_y_prime.unsqueeze(2) / x_double_prime_norm_sq.unsqueeze(2)  # (batch_size, out_features, 1)
