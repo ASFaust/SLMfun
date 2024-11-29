@@ -17,7 +17,7 @@ train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
 # Instantiate your custom network
 net = Net()
 
-epochs = 10
+epochs = 5
 
 ma_acc = 0.0
 

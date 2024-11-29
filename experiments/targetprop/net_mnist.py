@@ -3,6 +3,7 @@ from layers.linear import TargetPropagationLinear
 from layers.relu import TargetPropagationReLU
 from layers.inputhook import InputHook
 from layers.onehot import TargetPropagationOnehot
+from layers.binary import TargetPropagationBinary
 
 class Net:
     def __init__(self):

@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class TargetPropagationLinear:
     def __init__(self, in_features, out_features, input_hook, epsilon=1e-8):
         # Adjusted the weight shape to (out_features, in_features)
-        self.w = torch.randn((out_features, in_features), requires_grad=False) * 0.001
+        self.w = torch.randn((out_features, in_features), requires_grad=False) * 0.01
         self.input_hook = input_hook
         self.y = None  # To store output during forward pass
         self.x = None  # To store input during forward pass
@@ -43,7 +43,7 @@ class TargetPropagationLinear:
             # Compute delta_y
             delta_y = y_prime - self.y  # (batch_size, out_features)
 
-            # Compute delta_y_w: element-wise multiplication
+            # Compute delta_x: element-wise multiplication
             # Expand dimensions to allow broadcasting
             delta_y_exp = delta_y.unsqueeze(2)  # (batch_size, out_features, 1)
             w_exp = self.w.unsqueeze(0)  # (1, out_features, in_features)
@@ -55,7 +55,6 @@ class TargetPropagationLinear:
 
             # Compute feasible target x'': apply activation function
             x_double_prime = self.input_hook.get_ft(x_prime)
-
 
             # Compute y'' = <x'', w>
             y_double_prime = torch.matmul(x_double_prime, self.w.T)  # (batch_size, out_features)
@@ -77,6 +76,7 @@ class TargetPropagationLinear:
             #self.acc_w *= 0.9
             #self.acc_w += delta_w
 
+            #print("max abs delta_w", torch.max(torch.abs(delta_w)))
             self.w += delta_w
 
         self.input_hook.backward(x_double_prime)  # Call backward on the input hook with the feasible target

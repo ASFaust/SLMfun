@@ -13,5 +13,5 @@ class InputHook:
         # For the input layer, the feasible target is the input. x_prime is an updated target, but we can't abide by it.
         return self.input
 
-    def backward(self, x_prime):
+    def backward(self, y_prime):
         pass

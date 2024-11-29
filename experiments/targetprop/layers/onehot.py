@@ -28,15 +28,29 @@ class TargetPropagationOnehot:
 
     def get_ft(self, x_prime):
         """
-        Computes the feasible target x'' for the current layer.
-        For a onehot layer, the feasible target is the same as its forward pass.
+        Computes the feasible target x'' for the next layer.
+        :param x_prime: the target from the next layer. computed as x + dx, reflecting how the input should change.
+        it has shape (batch_size, features)
         """
         return self.__call__(x_prime)
 
     def backward(self, y_prime):
+        """
+        Performs backward target propagation.
+        :param y_prime: the target for the output of this layer. it has shape (batch_size, features). It should adhere to the image of this layer. It is often computed using get_ft of this layer.
+        :return: Nothing, invokes the backward method of the input_hook. Computed is the target for the input_hook layer.
+        """
         with torch.no_grad():
-            ret = y_prime.clone()
-            #ret[self.output == 1] = self.input[y_prime == 1]
-            #ret[y_prime == 1] = self.input[self.output == 1]
+            # Start with a clone of the input
+            ret = self.input.clone()
 
+            # For the target class (where y_prime == 1), ensure ret >= 1
+            target_indices = y_prime == 1
+            ret[target_indices] = torch.clamp_min(ret[target_indices], 1.0)
+
+            # For all other classes (where y_prime == 0), ensure ret <= 0
+            non_target_indices = y_prime == 0
+            ret[non_target_indices] = torch.clamp_max(ret[non_target_indices], 0.0)
+
+            # Pass the modified ret to the previous layer
             self.input_hook.backward(ret)
