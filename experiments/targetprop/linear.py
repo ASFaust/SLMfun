@@ -9,7 +9,9 @@ class TargetPropagationLinear:
         self.w = torch.randn((out_features, in_features), requires_grad=False)
         self.input_hook = input_hook
         self.y = None  # To store output during forward pass
+        self.x = None  # To store input during forward pass
         self.epsilon = epsilon
+        #self.acc_w = torch.zeros_like(self.w)
 
     def __call__(self, x):
         """
@@ -18,7 +20,8 @@ class TargetPropagationLinear:
         with torch.no_grad():
             # Adjusted to match the new weight shape
             y = torch.matmul(x, self.w.T)  # (batch_size, in_features) @ (in_features, out_features)
-            self.y = y
+            self.y = y.clone()
+            self.x = x.clone()
         return y
 
     def get_ft(self, x_prime):
@@ -44,13 +47,14 @@ class TargetPropagationLinear:
             # Expand dimensions to allow broadcasting
             delta_y_exp = delta_y.unsqueeze(2)  # (batch_size, out_features, 1)
             w_exp = self.w.unsqueeze(0)  # (1, out_features, in_features)
-            delta_y_w = delta_y_exp * w_exp  # (batch_size, out_features, in_features)
+            delta_x = delta_y_exp * w_exp  # (batch_size, out_features, in_features)
 
             # Compute x': mean over neurons (out_features dimension)
-            x_prime = delta_y_w.mean(dim=1)  # (batch_size, in_features)
+            x_prime = self.x + delta_x.mean(dim=1)  # (batch_size, in_features)
 
             # Compute feasible target x'': apply activation function
             x_double_prime = self.input_hook.get_ft(x_prime)
+
 
             # Compute y'' = <x'', w>
             y_double_prime = torch.matmul(x_double_prime, self.w.T)  # (batch_size, out_features)
@@ -69,6 +73,19 @@ class TargetPropagationLinear:
             x_double_prime_exp = x_double_prime.unsqueeze(1)  # (batch_size, 1, in_features)
             delta_w = (update_factor * x_double_prime_exp).mean(dim=0)  # (out_features, in_features)
 
-            self.w += delta_w  # Update the weights
+            #self.acc_w *= 0.9
+            #self.acc_w += delta_w
+
+            self.w += delta_w
 
         self.input_hook.backward(x_double_prime)  # Call backward on the input hook with the feasible target
+
+
+if __name__ == '__main__':
+    # Define input hook
+    from inputhook import InputHook
+    input_hook = InputHook()
+
+    # Define target propagation layers
+    linear1 = TargetPropagationLinear(2, 3, input_hook)
+

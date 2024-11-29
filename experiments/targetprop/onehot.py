@@ -22,10 +22,8 @@ class TargetPropagationOnehot:
             y = torch.zeros_like(x)
             y[torch.arange(x.shape[0]), max_idx.squeeze()] = 1
             self.input = x
-            print("input", self.input)
             self.output = y
 
-            print("output", self.output)
         return y
 
     def get_ft(self, x_prime):
@@ -36,11 +34,9 @@ class TargetPropagationOnehot:
         return self.__call__(x_prime)
 
     def backward(self, y_prime):
-        print("y_prime", y_prime)
-
         with torch.no_grad():
             ret = self.input.clone()
             ret[self.output == 1] = self.input[y_prime == 1]
             ret[y_prime == 1] = self.input[self.output == 1]
-            print("ret", ret)
+
             self.input_hook.backward(ret)

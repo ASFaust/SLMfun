@@ -10,8 +10,9 @@ class InputHook:
         return x
 
     def get_ft(self, x_prime):
-        # For the input layer, the feasible target is the target itself
-        return x_prime
+        # For the input layer, the feasible target is the input. x_prime is an updated target, but we can't abide by it.
+
+        return self.input
 
     def backward(self, x_prime):
         # For the input layer, you might store or process x_prime as needed
