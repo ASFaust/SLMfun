@@ -12,12 +12,12 @@ transform = transforms.Compose([
 train_dataset = datasets.MNIST(root='./data', train=True, download=True, transform=transform)
 
 # Create DataLoader for batching
-train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
 
 # Instantiate your custom network
 net = Net()
 
-epochs = 5
+epochs = 500
 
 ma_acc = 0.0
 
