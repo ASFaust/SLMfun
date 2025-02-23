@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class TargetPropagationLinear:
     def __init__(self, in_features, out_features, input_hook, epsilon=1e-8):
         # Adjusted the weight shape to (out_features, in_features)
-        self.w = torch.randn((out_features, in_features), requires_grad=False) * 0.01
+        self.w = torch.randn((out_features, in_features), requires_grad=False)  * 0.01
         self.input_hook = input_hook
         self.y = None  # To store output during forward pass
         self.x = None  # To store input during forward pass
