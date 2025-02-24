@@ -1,5 +1,6 @@
 import torch
 from activation1 import ReLUTransformLayer
+from activation2 import TanhTransformLayer
 from bias import TargetPropBias
 from linear import TargetPropLinear
 
@@ -20,8 +21,8 @@ class TargetPropNetwork:
             # Add linear layer
             self.layers.append(TargetPropLinear(input_dim, output_dim))
 
-            # Add ReLUTransformLayer
-            self.layers.append(ReLUTransformLayer())
+            # Add TanhTransformLayer
+            self.layers.append(TanhTransformLayer())
 
     def forward(self, x):
         for layer in self.layers:

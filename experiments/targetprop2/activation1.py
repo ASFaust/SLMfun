@@ -13,3 +13,4 @@ class ReLUTransformLayer:
         # If x < 0: x + 0 = y -> x = y
         x_prime = torch.where(y_prime > 0, y_prime / 2, y_prime)
         return x_prime
+
